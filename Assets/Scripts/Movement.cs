@@ -32,7 +32,7 @@ public class Movement : MonoBehaviour
     private bool TouchingGround;
     private bool HasDashed;
 
-    public int Side = 1;
+    public Side Side = Side.None;
 
     [Space]
     [Header("Polish")]
@@ -138,28 +138,15 @@ public class Movement : MonoBehaviour
 
         if (WallGrab || WallSlide || !CanMove)
             return;
-
-        if(x > 0)
-        {
-            Side = 1;
-            Animation.Flip(Side);
-        }
-        if (x < 0)
-        {
-            Side = -1;
-            Animation.Flip(Side);
-        }
-
-
+        if (x is not 0) Side = (Side)Math.Sign(x);
+        Animation.Face(Side);
     }
 
     void TouchGround()
     {
         HasDashed = false;
         IsDashing = false;
-
-        Side = Animation.SpriteRenderer.flipX ? -1 : 1;
-
+        Side = Animation.SpriteRenderer.flipX.ToSide();
         JumpParticle.Play();
     }
 
@@ -184,7 +171,7 @@ public class Movement : MonoBehaviour
     {
         FindObjectOfType<GhostTrail>().ShowGhost();
         StartCoroutine(GroundDash());
-        DOVirtual.Float(14, 0, .8f, RigidbodyDrag);
+        DOVirtual.Float(14, 0, .8f, (x) => RigidBody.drag = x);
 
         DashParticle.Play();
         RigidBody.gravityScale = 0;
@@ -209,13 +196,11 @@ public class Movement : MonoBehaviour
     }
     private void Flip()
     {
-        Side *= -1;
-        Animation.Flip(Side);
+        Animation.Face(Side.Opposite());
     }
     private void WallJump()
     {
-        if (Side != Collision.WallSide) Flip();
-
+        Side = Collision.WallSide;
         StopCoroutine(DisableMovement(0));
         StartCoroutine(DisableMovement(.1f));
 
@@ -228,7 +213,7 @@ public class Movement : MonoBehaviour
 
     private void DoWallSlide()
     {
-        if(Collision.WallSide != Side) Animation.Flip(Side * -1);
+        Side = Collision.WallSide;
         if (!CanMove) return;
         bool pushingWall = (RigidBody.velocity.x > 0 && Collision.OnRightWall) || (RigidBody.velocity.x < 0 && Collision.OnLeftWall);
         float push = pushingWall ? 0 : RigidBody.velocity.x;
@@ -259,19 +244,12 @@ public class Movement : MonoBehaviour
 
         particle.Play();
     }
-
     IEnumerator DisableMovement(float time)
     {
         CanMove = false;
         yield return new WaitForSeconds(time);
         CanMove = true;
     }
-
-    void RigidbodyDrag(float x)
-    {
-        RigidBody.drag = x;
-    }
-
     void WallParticle(float vertical)
     {
         if (WallSlide || (WallGrab && vertical < 0))
@@ -280,9 +258,28 @@ public class Movement : MonoBehaviour
         }
     }
 
-    int ParticleSide()
+    int ParticleSide() => (int)Collision.WallSide;
+}
+public enum Side { Left = -1, None = 0, Right = 1 }
+public static class Utils 
+{
+    public static Side Opposite(this Side side) => side switch
     {
-        int particleSide = Collision.WallSide;
-        return particleSide;
-    }
+        Side.Left => Side.Right,
+        Side.Right => Side.Left,
+        _ => Side.None
+    };
+    /// <summary>
+    /// Returns the <see cref="Side"/> value corresponding to whether the sprite is flipped.
+    /// </summary>
+    /// <param name="flipX">A boolean value equivalent to <see cref="SpriteRenderer.flipX"/>.</param>
+    /// <returns><see cref="Side.Left">Left</see> if <c>flipX</c> is <c>true</c> or <see cref="Side.Right">Right</see> otherwise.</returns>
+    public static Side ToSide(this bool flipX) => flipX ? Side.Left : Side.Right;
+    public static Side ToSide(this float xComponent, Side current = Side.None) => xComponent switch
+    {
+        > 0 => Side.Right,
+        < 0 => Side.Left,
+        _ => current
+    };
+    public static Side ToSide(this Vector2 vec) => vec.x.ToSide();
 }

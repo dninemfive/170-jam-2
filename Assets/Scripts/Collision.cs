@@ -14,7 +14,7 @@ public class Collision : MonoBehaviour
     public bool OnWall;
     public bool OnRightWall;
     public bool OnLeftWall;
-    public int WallSide;
+    public Side WallSide;
 
     [Space]
 
@@ -36,7 +36,12 @@ public class Collision : MonoBehaviour
         OnRightWall = Physics2D.OverlapCircle((Vector2)transform.position + RightOffset, CollisionRadius, GroundLayer);
         OnLeftWall = Physics2D.OverlapCircle((Vector2)transform.position + LeftOffset, CollisionRadius, GroundLayer);
         OnWall = OnRightWall || OnLeftWall;
-        WallSide = OnRightWall ? -1 : 1;
+        WallSide = (OnRightWall, OnLeftWall) switch
+        {
+            (true, false) => Side.Right,
+            (false, true) => Side.Left,
+            _ => Side.None
+        };
     }
 
     void OnDrawGizmos()

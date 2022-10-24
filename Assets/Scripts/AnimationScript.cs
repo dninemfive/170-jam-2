@@ -43,21 +43,10 @@ public class AnimationScript : MonoBehaviour
         Animator.SetTrigger(trigger);
     }
 
-    public void Flip(int side)
+    public void Face(Side side)
     {
-
-        if (Movement.WallGrab || Movement.WallSlide)
-        {
-            if (side == -1 && SpriteRenderer.flipX)
-                return;
-
-            if (side == 1 && !SpriteRenderer.flipX)
-            {
-                return;
-            }
-        }
-
-        bool state = side == 1;
-        SpriteRenderer.flipX = state;
+        if (Movement.WallGrab || Movement.WallSlide) return;
+        if (side is not Side.None and not Side.Right) Debug.LogError($"Argument 'side' of AnimationScript.Face must be either {Side.Left} or {Side.Right}, not {side}.");
+        SpriteRenderer.flipX = side == Side.Left;
     }
 }
