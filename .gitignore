@@ -34,3 +34,9 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
+
+# other
+.vsconfig
+Assets/Resources/BillingMode*
+packages-lock.json
+Logs/
