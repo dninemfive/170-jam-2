@@ -63,7 +63,7 @@ public class Movement : MonoBehaviour
 
         if (Collision.OnWall && Input.GetButton("Fire3") && CanMove)
         {
-            if (Side != Collision.WallSide) Flip();
+            Side = Collision.WallSide;
             WallGrab = true;
             WallSlide = false;
         }
@@ -88,7 +88,7 @@ public class Movement : MonoBehaviour
 
             float speedModifier = y > 0 ? .5f : 1;
 
-            RigidBody.velocity = new Vector2(RigidBody.velocity.x, y * (Speed * speedModifier));
+            RigidBody.velocity = new(RigidBody.velocity.x, y * (Speed * speedModifier));
         }
         else
         {
@@ -104,17 +104,13 @@ public class Movement : MonoBehaviour
             }
         }
 
-        if (!Collision.OnWall || Collision.OnGround)
-            WallSlide = false;
+        if (!Collision.OnWall || Collision.OnGround) WallSlide = false;
 
         if (Input.GetButtonDown("Jump"))
         {
             Animation.SetTrigger("jump");
-
-            if (Collision.OnGround)
-                Jump(Vector2.up, false);
-            if (Collision.OnWall && !Collision.OnGround)
-                WallJump();
+            if (Collision.OnGround) Jump(Vector2.up, false);
+            if (Collision.OnWall && !Collision.OnGround) WallJump();
         }
 
         if (Input.GetButtonDown("Fire1") && !HasDashed)
@@ -138,7 +134,7 @@ public class Movement : MonoBehaviour
 
         if (WallGrab || WallSlide || !CanMove)
             return;
-        if (x is not 0) Side = (Side)Math.Sign(x);
+        if (x is not 0) Side = x.ToSide();
         Animation.Face(Side);
     }
 
@@ -194,10 +190,6 @@ public class Movement : MonoBehaviour
         if (Collision.OnGround)
             HasDashed = false;
     }
-    private void Flip()
-    {
-        Animation.Face(Side.Opposite());
-    }
     private void WallJump()
     {
         Side = Collision.WallSide;
@@ -234,13 +226,13 @@ public class Movement : MonoBehaviour
         }
     }
 
-    private void Jump(Vector2 dir, bool wall)
+    private void Jump(Vector2 scaledDirection, bool wall = false)
     {
-        SlideParticle.transform.parent.localScale = new Vector3(ParticleSide(), 1, 1);
+        SlideParticle.transform.parent.localScale = new(ParticleSide, 1, 1);
         ParticleSystem particle = wall ? WallJumpParticle : JumpParticle;
 
         RigidBody.velocity = new(RigidBody.velocity.x, 0);
-        RigidBody.velocity += dir * JumpForce;
+        RigidBody.velocity += scaledDirection * JumpForce;
 
         particle.Play();
     }
@@ -254,32 +246,8 @@ public class Movement : MonoBehaviour
     {
         if (WallSlide || (WallGrab && vertical < 0))
         {
-            SlideParticle.transform.parent.localScale = new Vector3(ParticleSide(), 1, 1);
+            SlideParticle.transform.parent.localScale = new(ParticleSide, 1, 1);
         }
     }
-
-    int ParticleSide() => (int)Collision.WallSide;
-}
-public enum Side { Left = -1, None = 0, Right = 1 }
-public static class Utils 
-{
-    public static Side Opposite(this Side side) => side switch
-    {
-        Side.Left => Side.Right,
-        Side.Right => Side.Left,
-        _ => Side.None
-    };
-    /// <summary>
-    /// Returns the <see cref="Side"/> value corresponding to whether the sprite is flipped.
-    /// </summary>
-    /// <param name="flipX">A boolean value equivalent to <see cref="SpriteRenderer.flipX"/>.</param>
-    /// <returns><see cref="Side.Left">Left</see> if <c>flipX</c> is <c>true</c> or <see cref="Side.Right">Right</see> otherwise.</returns>
-    public static Side ToSide(this bool flipX) => flipX ? Side.Left : Side.Right;
-    public static Side ToSide(this float xComponent, Side current = Side.None) => xComponent switch
-    {
-        > 0 => Side.Right,
-        < 0 => Side.Left,
-        _ => current
-    };
-    public static Side ToSide(this Vector2 vec) => vec.x.ToSide();
+    int ParticleSide => (int)Collision.WallSide;
 }

@@ -46,7 +46,7 @@ public class AnimationScript : MonoBehaviour
     public void Face(Side side)
     {
         if (Movement.WallGrab || Movement.WallSlide) return;
-        if (side is not Side.None and not Side.Right) Debug.LogError($"Argument 'side' of AnimationScript.Face must be either {Side.Left} or {Side.Right}, not {side}.");
+        if (side is not Side.Left and not Side.Right) Debug.LogError($"Argument 'side' of AnimationScript.Face must be either {Side.Left} or {Side.Right}, not {side}.");
         SpriteRenderer.flipX = side == Side.Left;
     }
 }
