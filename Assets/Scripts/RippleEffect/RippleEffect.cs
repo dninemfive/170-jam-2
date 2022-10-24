@@ -32,7 +32,7 @@ public class RippleEffect : MonoBehaviour
     public float DropInterval = 0.5f;
 
     [SerializeField, HideInInspector]
-    Shader Shader;
+    Shader shader;
 
     class Droplet
     {
@@ -49,11 +49,7 @@ public class RippleEffect : MonoBehaviour
     }
 
     readonly Droplet[] Droplets = { new Droplet(), new Droplet(), new Droplet() };
-    readonly Texture2D GradTexture = new(2048, 1, TextureFormat.Alpha8, false) 
-    { 
-        wrapMode = TextureWrapMode.Clamp,
-        filterMode = FilterMode.Bilinear
-    };
+    Texture2D GradTexture;
     Material Material;
     float Timer;
     int DropCount;
@@ -73,6 +69,11 @@ public class RippleEffect : MonoBehaviour
 
     void Awake()
     {
+        GradTexture = new(2048, 1, TextureFormat.Alpha8, false)
+        {
+            wrapMode = TextureWrapMode.Clamp,
+            filterMode = FilterMode.Bilinear
+        };
         for (int i = 0; i < GradTexture.width; i++)
         {
             float x = 1.0f / GradTexture.width * i;
@@ -81,7 +82,7 @@ public class RippleEffect : MonoBehaviour
         }
         GradTexture.Apply();
 
-        Material = new Material(Shader)
+        Material = new Material(shader)
         {
             hideFlags = HideFlags.DontSave
         };

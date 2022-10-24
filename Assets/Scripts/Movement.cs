@@ -288,16 +288,9 @@ public class Movement : MonoBehaviour
 
     void WallParticle(float vertical)
     {
-        var main = SlideParticle.main;
-
         if (WallSlide || (WallGrab && vertical < 0))
         {
             SlideParticle.transform.parent.localScale = new Vector3(ParticleSide(), 1, 1);
-            main.startColor = Color.white;
-        }
-        else
-        {
-            main.startColor = Color.clear;
         }
     }
 

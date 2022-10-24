@@ -10,6 +10,7 @@ public class BetterJumping : MonoBehaviour
 
     void Start()
     {
+        Debug.Log(Physics2D.gravity);
         RigidBody = GetComponent<Rigidbody2D>();
     }
 

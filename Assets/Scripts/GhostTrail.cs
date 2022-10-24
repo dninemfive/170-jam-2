@@ -19,17 +19,17 @@ public class GhostTrail : MonoBehaviour
 
     public void ShowGhost()
     {
-        Sequence s = DOTween.Sequence();
+        Sequence sequence = DOTween.Sequence();
 
         for (int i = 0; i < GhostParent.childCount; i++)
         {
             Transform currentGhost = GhostParent.GetChild(i);
-            s.AppendCallback(()=> currentGhost.position = Movement.transform.position);
-            s.AppendCallback(() => currentGhost.GetComponent<SpriteRenderer>().flipX = Animation.SpriteRenderer.flipX);
-            s.AppendCallback(()=>currentGhost.GetComponent<SpriteRenderer>().sprite = Animation.SpriteRenderer.sprite);
-            s.Append(currentGhost.GetComponent<SpriteRenderer>().material.DOColor(TrailColor, 0));
-            s.AppendCallback(() => FadeSprite(currentGhost));
-            s.AppendInterval(GhostInterval);
+            sequence.AppendCallback(()=> currentGhost.position = Movement.transform.position);
+            sequence.AppendCallback(() => currentGhost.GetComponent<SpriteRenderer>().flipX = Animation.SpriteRenderer.flipX);
+            sequence.AppendCallback(()=>currentGhost.GetComponent<SpriteRenderer>().sprite = Animation.SpriteRenderer.sprite);
+            sequence.Append(currentGhost.GetComponent<SpriteRenderer>().material.DOColor(TrailColor, 0));
+            sequence.AppendCallback(() => FadeSprite(currentGhost));
+            sequence.AppendInterval(GhostInterval);
         }
     }
 
