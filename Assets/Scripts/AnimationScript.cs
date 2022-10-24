@@ -5,59 +5,59 @@ using UnityEngine;
 public class AnimationScript : MonoBehaviour
 {
 
-    private Animator anim;
-    private Movement move;
-    private Collision coll;
+    private Animator Animator;
+    private Movement Movement;
+    private Collision Collision;
     [HideInInspector]
-    public SpriteRenderer sr;
+    public SpriteRenderer SpriteRenderer;
 
     void Start()
     {
-        anim = GetComponent<Animator>();
-        coll = GetComponentInParent<Collision>();
-        move = GetComponentInParent<Movement>();
-        sr = GetComponent<SpriteRenderer>();
+        Animator = GetComponent<Animator>();
+        Collision = GetComponentInParent<Collision>();
+        Movement = GetComponentInParent<Movement>();
+        SpriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     void Update()
     {
-        anim.SetBool("onGround", coll.onGround);
-        anim.SetBool("onWall", coll.onWall);
-        anim.SetBool("onRightWall", coll.onRightWall);
-        anim.SetBool("wallGrab", move.wallGrab);
-        anim.SetBool("wallSlide", move.wallSlide);
-        anim.SetBool("canMove", move.canMove);
-        anim.SetBool("isDashing", move.isDashing);
+        Animator.SetBool("onGround", Collision.OnGround);
+        Animator.SetBool("onWall", Collision.OnWall);
+        Animator.SetBool("onRightWall", Collision.OnRightWall);
+        Animator.SetBool("wallGrab", Movement.WallGrab);
+        Animator.SetBool("wallSlide", Movement.WallSlide);
+        Animator.SetBool("canMove", Movement.CanMove);
+        Animator.SetBool("isDashing", Movement.IsDashing);
 
     }
 
     public void SetHorizontalMovement(float x,float y, float yVel)
     {
-        anim.SetFloat("HorizontalAxis", x);
-        anim.SetFloat("VerticalAxis", y);
-        anim.SetFloat("VerticalVelocity", yVel);
+        Animator.SetFloat("HorizontalAxis", x);
+        Animator.SetFloat("VerticalAxis", y);
+        Animator.SetFloat("VerticalVelocity", yVel);
     }
 
     public void SetTrigger(string trigger)
     {
-        anim.SetTrigger(trigger);
+        Animator.SetTrigger(trigger);
     }
 
     public void Flip(int side)
     {
 
-        if (move.wallGrab || move.wallSlide)
+        if (Movement.WallGrab || Movement.WallSlide)
         {
-            if (side == -1 && sr.flipX)
+            if (side == -1 && SpriteRenderer.flipX)
                 return;
 
-            if (side == 1 && !sr.flipX)
+            if (side == 1 && !SpriteRenderer.flipX)
             {
                 return;
             }
         }
 
-        bool state = (side == 1) ? false : true;
-        sr.flipX = state;
+        bool state = side == 1;
+        SpriteRenderer.flipX = state;
     }
 }

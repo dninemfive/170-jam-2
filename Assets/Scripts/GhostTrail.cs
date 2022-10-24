@@ -3,42 +3,40 @@ using DG.Tweening;
 
 public class GhostTrail : MonoBehaviour
 {
-    private Movement move;
-    private AnimationScript anim;
-    private SpriteRenderer sr;
-    public Transform ghostsParent;
-    public Color trailColor;
-    public Color fadeColor;
-    public float ghostInterval;
-    public float fadeTime;
+    private Movement Movement;
+    private AnimationScript Animation;
+    public Transform GhostParent;
+    public Color TrailColor;
+    public Color FadeColor;
+    public float GhostInterval;
+    public float FadeTime;
 
     private void Start()
     {
-        anim = FindObjectOfType<AnimationScript>();
-        move = FindObjectOfType<Movement>();
-        sr = GetComponent<SpriteRenderer>();
+        Animation = FindObjectOfType<AnimationScript>();
+        Movement = FindObjectOfType<Movement>();
     }
 
     public void ShowGhost()
     {
         Sequence s = DOTween.Sequence();
 
-        for (int i = 0; i < ghostsParent.childCount; i++)
+        for (int i = 0; i < GhostParent.childCount; i++)
         {
-            Transform currentGhost = ghostsParent.GetChild(i);
-            s.AppendCallback(()=> currentGhost.position = move.transform.position);
-            s.AppendCallback(() => currentGhost.GetComponent<SpriteRenderer>().flipX = anim.sr.flipX);
-            s.AppendCallback(()=>currentGhost.GetComponent<SpriteRenderer>().sprite = anim.sr.sprite);
-            s.Append(currentGhost.GetComponent<SpriteRenderer>().material.DOColor(trailColor, 0));
+            Transform currentGhost = GhostParent.GetChild(i);
+            s.AppendCallback(()=> currentGhost.position = Movement.transform.position);
+            s.AppendCallback(() => currentGhost.GetComponent<SpriteRenderer>().flipX = Animation.SpriteRenderer.flipX);
+            s.AppendCallback(()=>currentGhost.GetComponent<SpriteRenderer>().sprite = Animation.SpriteRenderer.sprite);
+            s.Append(currentGhost.GetComponent<SpriteRenderer>().material.DOColor(TrailColor, 0));
             s.AppendCallback(() => FadeSprite(currentGhost));
-            s.AppendInterval(ghostInterval);
+            s.AppendInterval(GhostInterval);
         }
     }
 
     public void FadeSprite(Transform current)
     {
         current.GetComponent<SpriteRenderer>().material.DOKill();
-        current.GetComponent<SpriteRenderer>().material.DOColor(fadeColor, fadeTime);
+        current.GetComponent<SpriteRenderer>().material.DOColor(FadeColor, FadeTime);
     }
 
 }

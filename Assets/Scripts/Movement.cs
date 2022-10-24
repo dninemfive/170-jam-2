@@ -6,47 +6,47 @@ using DG.Tweening;
 
 public class Movement : MonoBehaviour
 {
-    private Collision coll;
+    private Collision Collision;
     [HideInInspector]
-    public Rigidbody2D rb;
-    private AnimationScript anim;
+    public Rigidbody2D RigidBody;
+    private AnimationScript Animation;
 
     [Space]
     [Header("Stats")]
-    public float speed = 10;
-    public float jumpForce = 50;
-    public float slideSpeed = 5;
-    public float wallJumpLerp = 10;
-    public float dashSpeed = 20;
+    public float Speed = 10;
+    public float JumpForce = 50;
+    public float SlideSpeed = 5;
+    public float WallJumpLerp = 10;
+    public float DashSpeed = 20;
 
     [Space]
     [Header("Booleans")]
-    public bool canMove;
-    public bool wallGrab;
-    public bool wallJumped;
-    public bool wallSlide;
-    public bool isDashing;
+    public bool CanMove;
+    public bool WallGrab;
+    public bool WallJumped;
+    public bool WallSlide;
+    public bool IsDashing;
 
     [Space]
 
-    private bool groundTouch;
-    private bool hasDashed;
+    private bool TouchingGround;
+    private bool HasDashed;
 
-    public int side = 1;
+    public int Side = 1;
 
     [Space]
     [Header("Polish")]
-    public ParticleSystem dashParticle;
-    public ParticleSystem jumpParticle;
-    public ParticleSystem wallJumpParticle;
-    public ParticleSystem slideParticle;
+    public ParticleSystem DashParticle;
+    public ParticleSystem JumpParticle;
+    public ParticleSystem WallJumpParticle;
+    public ParticleSystem SlideParticle;
 
     // Start is called before the first frame update
     void Start()
     {
-        coll = GetComponent<Collision>();
-        rb = GetComponent<Rigidbody2D>();
-        anim = GetComponentInChildren<AnimationScript>();
+        Collision = GetComponent<Collision>();
+        RigidBody = GetComponent<Rigidbody2D>();
+        Animation = GetComponentInChildren<AnimationScript>();
     }
 
     // Update is called once per frame
@@ -59,109 +59,109 @@ public class Movement : MonoBehaviour
         Vector2 dir = new Vector2(x, y);
 
         Walk(dir);
-        anim.SetHorizontalMovement(x, y, rb.velocity.y);
+        Animation.SetHorizontalMovement(x, y, RigidBody.velocity.y);
 
-        if (coll.onWall && Input.GetButton("Fire3") && canMove)
+        if (Collision.OnWall && Input.GetButton("Fire3") && CanMove)
         {
-            if(side != coll.wallSide)
-                anim.Flip(side*-1);
-            wallGrab = true;
-            wallSlide = false;
+            if(Side != Collision.WallSide)
+                Animation.Flip(Side*-1);
+            WallGrab = true;
+            WallSlide = false;
         }
 
-        if (Input.GetButtonUp("Fire3") || !coll.onWall || !canMove)
+        if (Input.GetButtonUp("Fire3") || !Collision.OnWall || !CanMove)
         {
-            wallGrab = false;
-            wallSlide = false;
+            WallGrab = false;
+            WallSlide = false;
         }
 
-        if (coll.onGround && !isDashing)
+        if (Collision.OnGround && !IsDashing)
         {
-            wallJumped = false;
+            WallJumped = false;
             GetComponent<BetterJumping>().enabled = true;
         }
         
-        if (wallGrab && !isDashing)
+        if (WallGrab && !IsDashing)
         {
-            rb.gravityScale = 0;
+            RigidBody.gravityScale = 0;
             if(x > .2f || x < -.2f)
-            rb.velocity = new Vector2(rb.velocity.x, 0);
+            RigidBody.velocity = new Vector2(RigidBody.velocity.x, 0);
 
             float speedModifier = y > 0 ? .5f : 1;
 
-            rb.velocity = new Vector2(rb.velocity.x, y * (speed * speedModifier));
+            RigidBody.velocity = new Vector2(RigidBody.velocity.x, y * (Speed * speedModifier));
         }
         else
         {
-            rb.gravityScale = 3;
+            RigidBody.gravityScale = 3;
         }
 
-        if(coll.onWall && !coll.onGround)
+        if(Collision.OnWall && !Collision.OnGround)
         {
-            if (x != 0 && !wallGrab)
+            if (x != 0 && !WallGrab)
             {
-                wallSlide = true;
-                WallSlide();
+                WallSlide = true;
+                DoWallSlide();
             }
         }
 
-        if (!coll.onWall || coll.onGround)
-            wallSlide = false;
+        if (!Collision.OnWall || Collision.OnGround)
+            WallSlide = false;
 
         if (Input.GetButtonDown("Jump"))
         {
-            anim.SetTrigger("jump");
+            Animation.SetTrigger("jump");
 
-            if (coll.onGround)
+            if (Collision.OnGround)
                 Jump(Vector2.up, false);
-            if (coll.onWall && !coll.onGround)
+            if (Collision.OnWall && !Collision.OnGround)
                 WallJump();
         }
 
-        if (Input.GetButtonDown("Fire1") && !hasDashed)
+        if (Input.GetButtonDown("Fire1") && !HasDashed)
         {
             if(xRaw != 0 || yRaw != 0)
                 Dash(xRaw, yRaw);
         }
 
-        if (coll.onGround && !groundTouch)
+        if (Collision.OnGround && !TouchingGround)
         {
-            GroundTouch();
-            groundTouch = true;
+            TouchGround();
+            TouchingGround = true;
         }
 
-        if(!coll.onGround && groundTouch)
+        if(!Collision.OnGround && TouchingGround)
         {
-            groundTouch = false;
+            TouchingGround = false;
         }
 
         WallParticle(y);
 
-        if (wallGrab || wallSlide || !canMove)
+        if (WallGrab || WallSlide || !CanMove)
             return;
 
         if(x > 0)
         {
-            side = 1;
-            anim.Flip(side);
+            Side = 1;
+            Animation.Flip(Side);
         }
         if (x < 0)
         {
-            side = -1;
-            anim.Flip(side);
+            Side = -1;
+            Animation.Flip(Side);
         }
 
 
     }
 
-    void GroundTouch()
+    void TouchGround()
     {
-        hasDashed = false;
-        isDashing = false;
+        HasDashed = false;
+        IsDashing = false;
 
-        side = anim.sr.flipX ? -1 : 1;
+        Side = Animation.SpriteRenderer.flipX ? -1 : 1;
 
-        jumpParticle.Play();
+        JumpParticle.Play();
     }
 
     private void Dash(float x, float y)
@@ -170,14 +170,14 @@ public class Movement : MonoBehaviour
         Camera.main.transform.DOShakePosition(.2f, .5f, 14, 90, false, true);
         FindObjectOfType<RippleEffect>().Emit(Camera.main.WorldToViewportPoint(transform.position));
 
-        hasDashed = true;
+        HasDashed = true;
 
-        anim.SetTrigger("dash");
+        Animation.SetTrigger("dash");
 
-        rb.velocity = Vector2.zero;
+        RigidBody.velocity = Vector2.zero;
         Vector2 dir = new Vector2(x, y);
 
-        rb.velocity += dir.normalized * dashSpeed;
+        RigidBody.velocity += dir.normalized * DashSpeed;
         StartCoroutine(DashWait());
     }
 
@@ -187,112 +187,112 @@ public class Movement : MonoBehaviour
         StartCoroutine(GroundDash());
         DOVirtual.Float(14, 0, .8f, RigidbodyDrag);
 
-        dashParticle.Play();
-        rb.gravityScale = 0;
+        DashParticle.Play();
+        RigidBody.gravityScale = 0;
         GetComponent<BetterJumping>().enabled = false;
-        wallJumped = true;
-        isDashing = true;
+        WallJumped = true;
+        IsDashing = true;
 
         yield return new WaitForSeconds(.3f);
 
-        dashParticle.Stop();
-        rb.gravityScale = 3;
+        DashParticle.Stop();
+        RigidBody.gravityScale = 3;
         GetComponent<BetterJumping>().enabled = true;
-        wallJumped = false;
-        isDashing = false;
+        WallJumped = false;
+        IsDashing = false;
     }
 
     IEnumerator GroundDash()
     {
         yield return new WaitForSeconds(.15f);
-        if (coll.onGround)
-            hasDashed = false;
+        if (Collision.OnGround)
+            HasDashed = false;
     }
 
     private void WallJump()
     {
-        if ((side == 1 && coll.onRightWall) || side == -1 && !coll.onRightWall)
+        if ((Side == 1 && Collision.OnRightWall) || Side == -1 && !Collision.OnRightWall)
         {
-            side *= -1;
-            anim.Flip(side);
+            Side *= -1;
+            Animation.Flip(Side);
         }
 
         StopCoroutine(DisableMovement(0));
         StartCoroutine(DisableMovement(.1f));
 
-        Vector2 wallDir = coll.onRightWall ? Vector2.left : Vector2.right;
+        Vector2 wallDir = Collision.OnRightWall ? Vector2.left : Vector2.right;
 
         Jump((Vector2.up / 1.5f + wallDir / 1.5f), true);
 
-        wallJumped = true;
+        WallJumped = true;
     }
 
-    private void WallSlide()
+    private void DoWallSlide()
     {
-        if(coll.wallSide != side)
-         anim.Flip(side * -1);
+        if(Collision.WallSide != Side)
+         Animation.Flip(Side * -1);
 
-        if (!canMove)
+        if (!CanMove)
             return;
 
         bool pushingWall = false;
-        if((rb.velocity.x > 0 && coll.onRightWall) || (rb.velocity.x < 0 && coll.onLeftWall))
+        if((RigidBody.velocity.x > 0 && Collision.OnRightWall) || (RigidBody.velocity.x < 0 && Collision.OnLeftWall))
         {
             pushingWall = true;
         }
-        float push = pushingWall ? 0 : rb.velocity.x;
+        float push = pushingWall ? 0 : RigidBody.velocity.x;
 
-        rb.velocity = new Vector2(push, -slideSpeed);
+        RigidBody.velocity = new Vector2(push, -SlideSpeed);
     }
 
     private void Walk(Vector2 dir)
     {
-        if (!canMove)
+        if (!CanMove)
             return;
 
-        if (wallGrab)
+        if (WallGrab)
             return;
 
-        if (!wallJumped)
+        if (!WallJumped)
         {
-            rb.velocity = new Vector2(dir.x * speed, rb.velocity.y);
+            RigidBody.velocity = new Vector2(dir.x * Speed, RigidBody.velocity.y);
         }
         else
         {
-            rb.velocity = Vector2.Lerp(rb.velocity, (new Vector2(dir.x * speed, rb.velocity.y)), wallJumpLerp * Time.deltaTime);
+            RigidBody.velocity = Vector2.Lerp(RigidBody.velocity, (new Vector2(dir.x * Speed, RigidBody.velocity.y)), WallJumpLerp * Time.deltaTime);
         }
     }
 
     private void Jump(Vector2 dir, bool wall)
     {
-        slideParticle.transform.parent.localScale = new Vector3(ParticleSide(), 1, 1);
-        ParticleSystem particle = wall ? wallJumpParticle : jumpParticle;
+        SlideParticle.transform.parent.localScale = new Vector3(ParticleSide(), 1, 1);
+        ParticleSystem particle = wall ? WallJumpParticle : JumpParticle;
 
-        rb.velocity = new Vector2(rb.velocity.x, 0);
-        rb.velocity += dir * jumpForce;
+        RigidBody.velocity = new Vector2(RigidBody.velocity.x, 0);
+        RigidBody.velocity += dir * JumpForce;
 
         particle.Play();
     }
 
     IEnumerator DisableMovement(float time)
     {
-        canMove = false;
+        CanMove = false;
         yield return new WaitForSeconds(time);
-        canMove = true;
+        CanMove = true;
     }
 
     void RigidbodyDrag(float x)
     {
-        rb.drag = x;
+        RigidBody.drag = x;
     }
 
     void WallParticle(float vertical)
     {
-        var main = slideParticle.main;
+        var main = SlideParticle.main;
 
-        if (wallSlide || (wallGrab && vertical < 0))
+        if (WallSlide || (WallGrab && vertical < 0))
         {
-            slideParticle.transform.parent.localScale = new Vector3(ParticleSide(), 1, 1);
+            SlideParticle.transform.parent.localScale = new Vector3(ParticleSide(), 1, 1);
             main.startColor = Color.white;
         }
         else
@@ -303,7 +303,7 @@ public class Movement : MonoBehaviour
 
     int ParticleSide()
     {
-        int particleSide = coll.onRightWall ? 1 : -1;
+        int particleSide = Collision.OnRightWall ? 1 : -1;
         return particleSide;
     }
 }

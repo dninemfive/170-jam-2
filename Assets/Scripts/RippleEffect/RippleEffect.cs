@@ -3,7 +3,7 @@ using System.Collections;
 
 public class RippleEffect : MonoBehaviour
 {
-    public AnimationCurve waveform = new AnimationCurve(
+    public readonly AnimationCurve Waveform = new(
         new Keyframe(0.00f, 0.50f, 0, 0),
         new Keyframe(0.05f, 1.00f, 0, 0),
         new Keyframe(0.15f, 0.10f, 0, 0),
@@ -18,124 +18,104 @@ public class RippleEffect : MonoBehaviour
     );
 
     [Range(0.01f, 1.0f)]
-    public float refractionStrength = 0.5f;
+    public float RefractionStrength = 0.5f;
 
-    public Color reflectionColor = Color.gray;
+    public Color ReflectionColor = Color.gray;
 
     [Range(0.01f, 1.0f)]
-    public float reflectionStrength = 0.7f;
+    public float ReflectionStrength = 0.7f;
 
     [Range(1.0f, 5.0f)]
-    public float waveSpeed = 1.25f;
+    public float WaveSpeed = 1.25f;
 
     [Range(0.0f, 2.0f)]
-    public float dropInterval = 0.5f;
+    public float DropInterval = 0.5f;
 
     [SerializeField, HideInInspector]
-    Shader shader;
+    Shader Shader;
 
     class Droplet
     {
-        Vector2 position;
-        float time;
-
-        public Droplet()
-        {
-            time = 1000;
-        }
+        Vector2 Position;
+        float Time = 1000;
 
         public void Reset(Vector2 pos)
         {
-			position = pos;
-            time = 0;
+			Position = pos;
+            Time = 0;
         }
-
-        public void Update()
-        {
-            time += Time.deltaTime * 2;
-        }
-
-        public Vector4 MakeShaderParameter(float aspect)
-        {
-            return new Vector4(position.x * aspect, position.y, time, 0);
-        }
+        public void Update() => Time += UnityEngine.Time.deltaTime * 2;
+        public Vector4 MakeShaderParameter(float aspect) => new(Position.x * aspect, Position.y, Time, 0);
     }
 
-    Droplet[] droplets;
-    Texture2D gradTexture;
-    Material material;
-    float timer;
-    int dropCount;
+    readonly Droplet[] Droplets = { new Droplet(), new Droplet(), new Droplet() };
+    readonly Texture2D GradTexture = new(2048, 1, TextureFormat.Alpha8, false) 
+    { 
+        wrapMode = TextureWrapMode.Clamp,
+        filterMode = FilterMode.Bilinear
+    };
+    Material Material;
+    float Timer;
+    int DropCount;
 
     void UpdateShaderParameters()
     {
-        var c = GetComponent<Camera>();
+        Camera c = GetComponent<Camera>();
 
-        material.SetVector("_Drop1", droplets[0].MakeShaderParameter(c.aspect));
-        material.SetVector("_Drop2", droplets[1].MakeShaderParameter(c.aspect));
-        material.SetVector("_Drop3", droplets[2].MakeShaderParameter(c.aspect));
+        Material.SetVector("_Drop1", Droplets[0].MakeShaderParameter(c.aspect));
+        Material.SetVector("_Drop2", Droplets[1].MakeShaderParameter(c.aspect));
+        Material.SetVector("_Drop3", Droplets[2].MakeShaderParameter(c.aspect));
 
-        material.SetColor("_Reflection", reflectionColor);
-        material.SetVector("_Params1", new Vector4(c.aspect, 1, 1 / waveSpeed, 0));
-        material.SetVector("_Params2", new Vector4(1, 1 / c.aspect, refractionStrength, reflectionStrength));
+        Material.SetColor("_Reflection", ReflectionColor);
+        Material.SetVector("_Params1", new Vector4(c.aspect, 1, 1 / WaveSpeed, 0));
+        Material.SetVector("_Params2", new Vector4(1, 1 / c.aspect, RefractionStrength, ReflectionStrength));
     }
 
     void Awake()
     {
-        droplets = new Droplet[3];
-        droplets[0] = new Droplet();
-        droplets[1] = new Droplet();
-        droplets[2] = new Droplet();
-
-        gradTexture = new Texture2D(2048, 1, TextureFormat.Alpha8, false);
-        gradTexture.wrapMode = TextureWrapMode.Clamp;
-        gradTexture.filterMode = FilterMode.Bilinear;
-        for (var i = 0; i < gradTexture.width; i++)
+        for (int i = 0; i < GradTexture.width; i++)
         {
-            var x = 1.0f / gradTexture.width * i;
-            var a = waveform.Evaluate(x);
-            gradTexture.SetPixel(i, 0, new Color(a, a, a, a));
+            float x = 1.0f / GradTexture.width * i;
+            float a = Waveform.Evaluate(x);
+            GradTexture.SetPixel(i, 0, new Color(a, a, a, a));
         }
-        gradTexture.Apply();
+        GradTexture.Apply();
 
-        material = new Material(shader);
-        material.hideFlags = HideFlags.DontSave;
-        material.SetTexture("_GradTex", gradTexture);
+        Material = new Material(Shader)
+        {
+            hideFlags = HideFlags.DontSave
+        };
+        Material.SetTexture("_GradTex", GradTexture);
 
         UpdateShaderParameters();
     }
 
     void Update()
     {
-        if (dropInterval > 0)
+        if (DropInterval > 0)
         {
-            timer += Time.deltaTime;
-            while (timer > dropInterval)
-            {
-                //Emit();
-                timer -= dropInterval;
-            }
+            Timer += Time.deltaTime;
+            while (Timer > DropInterval) Timer -= DropInterval;
         }
 
-        foreach (var d in droplets) d.Update();
+        foreach (Droplet d in Droplets) d.Update();
 
         UpdateShaderParameters();
     }
 
     void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
-        Graphics.Blit(source, destination, material);
+        Graphics.Blit(source, destination, Material);
     }
 
     public void Emit(Vector2 pos)
     {
-        droplets[dropCount++ % droplets.Length].Reset(pos);
+        Droplets[DropCount++ % Droplets.Length].Reset(pos);
     }
 
     IEnumerator Stop()
     {
         yield return new WaitForSeconds(.3f);
-
     }
 
 }
