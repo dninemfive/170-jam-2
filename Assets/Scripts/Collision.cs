@@ -33,12 +33,9 @@ public class Collision : MonoBehaviour
     void Update()
     {  
         OnGround = Physics2D.OverlapCircle((Vector2)transform.position + BottomOffset, CollisionRadius, GroundLayer);
-        OnWall = Physics2D.OverlapCircle((Vector2)transform.position + RightOffset, CollisionRadius, GroundLayer) 
-            || Physics2D.OverlapCircle((Vector2)transform.position + LeftOffset, CollisionRadius, GroundLayer);
-
         OnRightWall = Physics2D.OverlapCircle((Vector2)transform.position + RightOffset, CollisionRadius, GroundLayer);
         OnLeftWall = Physics2D.OverlapCircle((Vector2)transform.position + LeftOffset, CollisionRadius, GroundLayer);
-
+        OnWall = OnRightWall || OnLeftWall;
         WallSide = OnRightWall ? -1 : 1;
     }
 

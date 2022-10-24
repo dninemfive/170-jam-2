@@ -63,8 +63,7 @@ public class Movement : MonoBehaviour
 
         if (Collision.OnWall && Input.GetButton("Fire3") && CanMove)
         {
-            if(Side != Collision.WallSide)
-                Animation.Flip(Side*-1);
+            if (Side != Collision.WallSide) Flip();
             WallGrab = true;
             WallSlide = false;
         }
@@ -208,14 +207,14 @@ public class Movement : MonoBehaviour
         if (Collision.OnGround)
             HasDashed = false;
     }
-
+    private void Flip()
+    {
+        Side *= -1;
+        Animation.Flip(Side);
+    }
     private void WallJump()
     {
-        if ((Side == 1 && Collision.OnRightWall) || Side == -1 && !Collision.OnRightWall)
-        {
-            Side *= -1;
-            Animation.Flip(Side);
-        }
+        if (Side != Collision.WallSide) Flip();
 
         StopCoroutine(DisableMovement(0));
         StartCoroutine(DisableMovement(.1f));
@@ -229,33 +228,20 @@ public class Movement : MonoBehaviour
 
     private void DoWallSlide()
     {
-        if(Collision.WallSide != Side)
-         Animation.Flip(Side * -1);
-
-        if (!CanMove)
-            return;
-
-        bool pushingWall = false;
-        if((RigidBody.velocity.x > 0 && Collision.OnRightWall) || (RigidBody.velocity.x < 0 && Collision.OnLeftWall))
-        {
-            pushingWall = true;
-        }
+        if(Collision.WallSide != Side) Animation.Flip(Side * -1);
+        if (!CanMove) return;
+        bool pushingWall = (RigidBody.velocity.x > 0 && Collision.OnRightWall) || (RigidBody.velocity.x < 0 && Collision.OnLeftWall);
         float push = pushingWall ? 0 : RigidBody.velocity.x;
 
-        RigidBody.velocity = new Vector2(push, -SlideSpeed);
+        RigidBody.velocity = new(push, -SlideSpeed);
     }
 
     private void Walk(Vector2 dir)
     {
-        if (!CanMove)
-            return;
-
-        if (WallGrab)
-            return;
-
+        if (!CanMove || WallGrab) return;
         if (!WallJumped)
         {
-            RigidBody.velocity = new Vector2(dir.x * Speed, RigidBody.velocity.y);
+            RigidBody.velocity = new(dir.x * Speed, RigidBody.velocity.y);
         }
         else
         {
@@ -268,7 +254,7 @@ public class Movement : MonoBehaviour
         SlideParticle.transform.parent.localScale = new Vector3(ParticleSide(), 1, 1);
         ParticleSystem particle = wall ? WallJumpParticle : JumpParticle;
 
-        RigidBody.velocity = new Vector2(RigidBody.velocity.x, 0);
+        RigidBody.velocity = new(RigidBody.velocity.x, 0);
         RigidBody.velocity += dir * JumpForce;
 
         particle.Play();
@@ -296,7 +282,7 @@ public class Movement : MonoBehaviour
 
     int ParticleSide()
     {
-        int particleSide = Collision.OnRightWall ? 1 : -1;
+        int particleSide = Collision.WallSide;
         return particleSide;
     }
 }
