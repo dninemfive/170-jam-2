@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -18,7 +19,6 @@ public class AnimationScript : MonoBehaviour
         Movement = GetComponentInParent<Movement>();
         SpriteRenderer = GetComponent<SpriteRenderer>();
     }
-
     void Update()
     {
         Animator.SetBool("onGround", Collision.OnGround);
@@ -28,7 +28,6 @@ public class AnimationScript : MonoBehaviour
         Animator.SetBool("wallSlide", Movement.WallSlide);
         Animator.SetBool("canMove", Movement.CanMove);
         Animator.SetBool("isDashing", Movement.IsDashing);
-
     }
 
     public void SetHorizontalMovement(float x,float y, float yVel)

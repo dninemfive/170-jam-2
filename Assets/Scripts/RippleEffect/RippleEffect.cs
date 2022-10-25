@@ -56,15 +56,12 @@ public class RippleEffect : MonoBehaviour
 
     void UpdateShaderParameters()
     {
-        Camera c = GetComponent<Camera>();
-
-        Material.SetVector("_Drop1", Droplets[0].MakeShaderParameter(c.aspect));
-        Material.SetVector("_Drop2", Droplets[1].MakeShaderParameter(c.aspect));
-        Material.SetVector("_Drop3", Droplets[2].MakeShaderParameter(c.aspect));
-
+        Camera camera = GetComponent<Camera>();
+        for (int i = 0; i < Droplets.Length; i++) 
+            Material.SetVector($"_Drop{i + 1}", Droplets[i].MakeShaderParameter(camera.aspect));
         Material.SetColor("_Reflection", ReflectionColor);
-        Material.SetVector("_Params1", new Vector4(c.aspect, 1, 1 / WaveSpeed, 0));
-        Material.SetVector("_Params2", new Vector4(1, 1 / c.aspect, RefractionStrength, ReflectionStrength));
+        Material.SetVector("_Params1", new Vector4(camera.aspect, 1, 1 / WaveSpeed, 0));
+        Material.SetVector("_Params2", new Vector4(1, 1 / camera.aspect, RefractionStrength, ReflectionStrength));
     }
 
     void Awake()

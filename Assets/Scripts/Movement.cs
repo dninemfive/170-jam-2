@@ -41,45 +41,65 @@ public class Movement : MonoBehaviour
     public ParticleSystem WallJumpParticle;
     public ParticleSystem SlideParticle;
 
+    [HideInInspector]
+    public List<Control> Controls { get; private set; }
     // Start is called before the first frame update
     void Start()
     {
         Collision = GetComponent<Collision>();
         RigidBody = GetComponent<Rigidbody2D>();
         Animation = GetComponentInChildren<AnimationScript>();
+        Controls = new()
+        {
+            new("Fire3", InputCheckType.GetButton, TryGrabWall),
+            new("Fire3", InputCheckType.GetButtonUp, ReleaseWall),
+            new("Jump", InputCheckType.GetButtonDown, Jump),
+            new("Fire1", InputCheckType.GetButtonDown, TryDash)
+        };
     }
-
+    public void TryGrabWall()
+    {
+        if (!CanMove || !Collision.OnWall) return;
+        Side = Collision.WallSide;
+        WallGrab = true;
+        WallSlide = false;
+    }
+    public void ReleaseWall()
+    {
+        WallGrab = false;
+        WallSlide = false;
+    }
+    public void Jump()
+    {
+        Animation.SetTrigger("jump");
+        if (Collision.OnGround) Jump(Vector2.up);
+        if (Collision.OnWall && !Collision.OnGround) WallJump();
+    }
+    public void TryDash()
+    {
+        if (HasDashed) return;
+        float xRaw = Input.GetAxisRaw("Horizontal");
+        float yRaw = Input.GetAxisRaw("Vertical");
+        if (xRaw != 0 || yRaw != 0) Dash(xRaw, yRaw);
+    }
     // Update is called once per frame
     void Update()
     {
         float x = Input.GetAxis("Horizontal");
         float y = Input.GetAxis("Vertical");
-        float xRaw = Input.GetAxisRaw("Horizontal");
-        float yRaw = Input.GetAxisRaw("Vertical");
-        Vector2 dir = new Vector2(x, y);
+        
+        Vector2 dir = new(x, y);
 
         Walk(dir);
         Animation.SetHorizontalMovement(x, y, RigidBody.velocity.y);
 
-        if (Collision.OnWall && Input.GetButton("Fire3") && CanMove)
-        {
-            Side = Collision.WallSide;
-            WallGrab = true;
-            WallSlide = false;
-        }
-
-        if (Input.GetButtonUp("Fire3") || !Collision.OnWall || !CanMove)
-        {
-            WallGrab = false;
-            WallSlide = false;
-        }
-
+        foreach (Control control in Controls) control.TryHandle();
+        if (!Collision.OnWall || !CanMove) ReleaseWall();
         if (Collision.OnGround && !IsDashing)
         {
             WallJumped = false;
             GetComponent<BetterJumping>().enabled = true;
-        }
-        
+        }        
         if (WallGrab && !IsDashing)
         {
             RigidBody.gravityScale = 0;
@@ -97,47 +117,25 @@ public class Movement : MonoBehaviour
 
         if(Collision.OnWall && !Collision.OnGround)
         {
-            if (x != 0 && !WallGrab)
-            {
-                WallSlide = true;
-                DoWallSlide();
-            }
-        }
-
-        if (!Collision.OnWall || Collision.OnGround) WallSlide = false;
-
-        if (Input.GetButtonDown("Jump"))
+            if (x != 0 && !WallGrab) DoWallSlide();
+        } 
+        else
         {
-            Animation.SetTrigger("jump");
-            if (Collision.OnGround) Jump(Vector2.up, false);
-            if (Collision.OnWall && !Collision.OnGround) WallJump();
-        }
+            WallSlide = false;
+        }      
 
-        if (Input.GetButtonDown("Fire1") && !HasDashed)
+        if(Collision.OnGround != TouchingGround)
         {
-            if(xRaw != 0 || yRaw != 0)
-                Dash(xRaw, yRaw);
-        }
-
-        if (Collision.OnGround && !TouchingGround)
-        {
-            TouchGround();
-            TouchingGround = true;
-        }
-
-        if(!Collision.OnGround && TouchingGround)
-        {
-            TouchingGround = false;
+            if (!TouchingGround) TouchGround();
+            TouchingGround = !TouchingGround;
         }
 
         WallParticle(y);
 
-        if (WallGrab || WallSlide || !CanMove)
-            return;
+        if (WallGrab || WallSlide || !CanMove) return;
         if (x is not 0) Side = x.ToSide();
         Animation.Face(Side);
     }
-
     void TouchGround()
     {
         HasDashed = false;
@@ -205,6 +203,7 @@ public class Movement : MonoBehaviour
 
     private void DoWallSlide()
     {
+        WallSlide = true;
         Side = Collision.WallSide;
         if (!CanMove) return;
         bool pushingWall = (RigidBody.velocity.x > 0 && Collision.OnRightWall) || (RigidBody.velocity.x < 0 && Collision.OnLeftWall);

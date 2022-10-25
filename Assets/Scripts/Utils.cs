@@ -6,6 +6,25 @@ using System.Threading.Tasks;
 using UnityEngine;
 
 public enum Side { Left = -1, None = 0, Right = 1 }
+public enum InputCheckType { GetButtonDown, GetButtonUp, GetButton }
+public delegate void HandleInput();
+public delegate bool CheckButtonStatus(string buttonName);
+public class Control
+{
+    public string InputName { get; private set; }
+    public InputCheckType InputCheckType { get; private set; }
+    public HandleInput HandleInput { get; private set; }
+    public Control(string inputName, InputCheckType status, HandleInput handler)
+    {
+        InputName = inputName;
+        InputCheckType = status;
+        HandleInput = handler;
+    }
+    public void TryHandle()
+    {
+        if (InputCheckType.ToMethod()(InputName)) HandleInput();
+    }
+}
 public static class Utils
 {
     public static Side Opposite(this Side side) => side switch
@@ -33,4 +52,15 @@ public static class Utils
         _ => current
     };
     public static Side ToSide(this Vector2 vec) => vec.x.ToSide();
+    public static CheckButtonStatus ToMethod(this InputCheckType status) => status switch
+    {
+        InputCheckType.GetButtonDown => Input.GetButtonDown,
+        InputCheckType.GetButton => Input.GetButton,
+        InputCheckType.GetButtonUp => Input.GetButtonUp,
+        _ => delegate(string s)
+        {
+            Debug.LogError($"Can't check if {s} is being pressed because {status} does not correspond to a valid Input method.");
+            return false;
+        }
+    };
 }
